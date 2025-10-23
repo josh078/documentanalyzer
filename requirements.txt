@@ -1,0 +1,4 @@
+flask
+python-dotenv
+azure-core
+azure-ai-documentintelligence

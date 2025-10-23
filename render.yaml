@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: azure-doc-intel-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: AZURE_AI_DOC_INTEL_EP
+        value: https://tmapdocintelligence.cognitiveservices.azure.com/
+      - key: AZURE_AI_DOC_INTEL_KEY
+        value: 260c0b6492b3459c968a9a818306cb21
+``
