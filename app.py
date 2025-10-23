@@ -4,6 +4,7 @@ from azure.ai.documentintelligence import DocumentIntelligenceClient
 from azure.ai.documentintelligence.models import AnalyzeResult
 from dotenv import load_dotenv
 from io import BytesIO
+from azure.ai.documentintelligence.models import AnalyzeDocumentRequest
 import base64
 import os
 import re
@@ -35,11 +36,13 @@ def analyze_pdf():
         pdf_bytes = base64.b64decode(base64_pdf)
         pdf_stream = BytesIO(pdf_bytes)
 
-        poller = document_intelligence_client.begin_analyze_document(
-            model_id="prebuilt-read",
-            content_type="application/pdf",
-            analyze_request=pdf_stream
-        )
+
+poller = document_intelligence_client.begin_analyze_document(
+    model_id="prebuilt-read",
+    content_type="application/pdf",
+    body=pdf_stream  # <-- this is the correct parameter
+)
+
         result: AnalyzeResult = poller.result()
         result_dict = result.as_dict()
 
@@ -57,4 +60,5 @@ def home():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port, debug=True)
+
 
