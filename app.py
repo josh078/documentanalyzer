@@ -50,6 +50,11 @@ def analyze_pdf():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/", methods=["GET"])
+def home():
+    return "✅ Document Analyzer is running. Use POST /analyze to send a base64 PDF."
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port, debug=True)
+
