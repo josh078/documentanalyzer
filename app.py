@@ -4,12 +4,13 @@ from azure.ai.documentintelligence import DocumentIntelligenceClient
 from azure.ai.documentintelligence.models import AnalyzeResult
 from dotenv import load_dotenv
 from io import BytesIO
-from azure.ai.documentintelligence.models import AnalyzeDocumentRequest
 import base64
 import os
-import re
 
+# Optional: increase max request size to 10MB
 app = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
+
 load_dotenv()
 
 # Azure credentials
@@ -21,13 +22,13 @@ document_intelligence_client = DocumentIntelligenceClient(
     credential=AzureKeyCredential(key)
 )
 
-# Your existing parsing function
-from parse_logic import parse_production_card  # move your function to parse_logic.py
+# Optional: if you're parsing in Flask, import your logic
+from parse_logic import parse_production_card
 
 @app.route("/analyze", methods=["POST"])
 def analyze_pdf():
     try:
-        data = request.get_json()
+        data = request.get_json(force=True)
         base64_pdf = data.get("pdf_base64")
 
         if not base64_pdf:
@@ -36,23 +37,23 @@ def analyze_pdf():
         pdf_bytes = base64.b64decode(base64_pdf)
         pdf_stream = BytesIO(pdf_bytes)
 
-
-poller = document_intelligence_client.begin_analyze_document(
-    model_id="prebuilt-read",
-    content_type="application/pdf",
-    body=pdf_stream  # <-- this is the correct parameter
-)
-
+        poller = document_intelligence_client.begin_analyze_document(
+            model_id="prebuilt-read",
+            content_type="application/pdf",
+            body=pdf_stream
+        )
         result: AnalyzeResult = poller.result()
         result_dict = result.as_dict()
 
+        # If you're parsing in Flask, use this:
         parsed = parse_production_card(result_dict["content"])
         return jsonify({"parsed_result": parsed})
 
+        # If you're returning raw Azure result instead, use this:
+        # return jsonify(result_dict)
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-
 @app.route("/", methods=["GET"])
 def home():
     return "✅ Document Analyzer is running. Use POST /analyze to send a base64 PDF."
@@ -60,5 +61,3 @@ def home():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port, debug=True)
-
-
